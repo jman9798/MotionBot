@@ -44,14 +44,14 @@ client.on('interactionCreate', async interaction => {
                 ),
                 new ActionRowBuilder().addComponents(
                     new TextInputBuilder()
-                        .setCustomId('prosecutionAttorney')
-                        .setLabel('Prosecution Attorney or Plaintiff Attorney')
+                        .setCustomId('yourAttorneyName')
+                        .setLabel('Your Attorney Name')
                         .setStyle(TextInputStyle.Short)
                 ),
                 new ActionRowBuilder().addComponents(
                     new TextInputBuilder()
-                        .setCustomId('defenseAttorney')
-                        .setLabel('Defense Attorney')
+                        .setCustomId('opposingCounsel')
+                        .setLabel('Opposing Counsel')
                         .setStyle(TextInputStyle.Short)
                 ),
                 new ActionRowBuilder().addComponents(
@@ -84,15 +84,15 @@ client.on('interactionCreate', async interaction => {
 
     try {
         const caseName = interaction.fields.getTextInputValue('caseName');
-        const prosecutionAttorney = interaction.fields.getTextInputValue('prosecutionAttorney');
-        const defenseAttorney = interaction.fields.getTextInputValue('defenseAttorney');
+        const yourAttorneyName = interaction.fields.getTextInputValue('yourAttorneyName');
+        const opposingCounsel = interaction.fields.getTextInputValue('opposingCounsel');
         const motionType = interaction.fields.getTextInputValue('motionType');
         const reasonForMotion = interaction.fields.getTextInputValue('reasonForMotion');
 
         console.log('Form Data:', {
             caseName,
-            prosecutionAttorney,
-            defenseAttorney,
+            yourAttorneyName,
+            opposingCounsel,
             motionType,
             reasonForMotion,
             courtType
@@ -104,24 +104,29 @@ client.on('interactionCreate', async interaction => {
         const stream = fs.createWriteStream(filePath);
         doc.pipe(stream);
 
+        // Load the cursive font
+        const cursiveFontPath = path.join(__dirname, 'fonts', 'GreatVibes-Regular.ttf');
+        doc.font('Times-Roman'); // Default font for the rest of the document
+
         doc.fontSize(14).text(`Commonwealth of San Andreas`, { align: 'center' });
         doc.fontSize(12).text(`The ${courtType}`, { align: 'center' });
         doc.moveDown();
-        doc.text('MOTION FOR', { align: 'center' });
+        doc.fontSize(18).text('MOTION FOR', { align: 'center' });
         doc.text(motionType, { align: 'center', underline: true });
         doc.moveDown();
         doc.text(` ${caseName}`, { align: 'center' });
         doc.moveDown();
-        doc.text(`DEFENDANT: ${defenseAttorney}`, { align: 'center' });
+        doc.fontSize(12).text(`Now comes ${yourAttorneyName},`);
         doc.moveDown();
-        doc.text(`Now comes ${prosecutionAttorney} [Defendant],`);
-        doc.moveDown();
-        doc.text(`In this action who requests:\nThat the ${motionType.toLowerCase()} should be inadmissible in the court of law.`);
+        doc.text(`I, ${yourAttorneyName}, respectfully requests that this Court grant the Motion for ${motionType.toLowerCase()} and provide such other and further relief as the Court deems just and proper.`);
         doc.moveDown();
         doc.text(`I. ${reasonForMotion}`);
         doc.moveDown();
         doc.text(`Date: ${new Date().toLocaleDateString()}`, { align: 'right' });
-        doc.text(`${interaction.user.username}`, { align: 'right' }); // Signed by the user who submitted
+        doc.moveDown();
+        doc.text(`Signed: ${yourAttorneyName},`,{ align: 'right' });
+        doc.moveDown();
+        doc.fontSize(24).font(cursiveFontPath).text(yourAttorneyName, { align: 'right' }); // Signed by the user who submitted
         doc.end();
 
         stream.on('finish', async () => {
