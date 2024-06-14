@@ -21,50 +21,57 @@ if (!fs.existsSync(motionsDir)) {
 client.on('interactionCreate', async interaction => {
     if (!interaction.isButton()) return;
 
-    if (interaction.customId === 'openModal') {
-        console.log('Button clicked, opening modal...');
-        try {
-            const modal = new ModalBuilder()
-                .setCustomId('motionForm')
-                .setTitle('Motion Form')
-                .addComponents(
-                    new ActionRowBuilder().addComponents(
-                        new TextInputBuilder()
-                            .setCustomId('caseName')
-                            .setLabel('Case Name')
-                            .setStyle(TextInputStyle.Short)
-                    ),
-                    new ActionRowBuilder().addComponents(
-                        new TextInputBuilder()
-                            .setCustomId('prosecutionAttorney')
-                            .setLabel('Prosecution Attorney or Plaintiff Attorney')
-                            .setStyle(TextInputStyle.Short)
-                    ),
-                    new ActionRowBuilder().addComponents(
-                        new TextInputBuilder()
-                            .setCustomId('defenseAttorney')
-                            .setLabel('Defense Attorney')
-                            .setStyle(TextInputStyle.Short)
-                    ),
-                    new ActionRowBuilder().addComponents(
-                        new TextInputBuilder()
-                            .setCustomId('motionType')
-                            .setLabel('Type of Motion')
-                            .setStyle(TextInputStyle.Short)
-                    ),
-                    new ActionRowBuilder().addComponents(
-                        new TextInputBuilder()
-                            .setCustomId('reasonForMotion')
-                            .setLabel('Reason for Motion')
-                            .setStyle(TextInputStyle.Paragraph)
-                    )
-                );
+    let courtType;
+    if (interaction.customId === 'criminalCourtMotion') {
+        courtType = 'Criminal Court';
+    } else if (interaction.customId === 'civilCourtMotion') {
+        courtType = 'Civil Court';
+    } else {
+        return;
+    }
 
-            await interaction.showModal(modal);
-            console.log('Modal shown successfully.');
-        } catch (error) {
-            console.error('Error showing modal:', error);
-        }
+    console.log(`Button clicked for ${courtType}, opening modal...`);
+    try {
+        const modal = new ModalBuilder()
+            .setCustomId(`motionForm_${courtType.replace(' ', '_')}`)
+            .setTitle(`${courtType} Motion Form`)
+            .addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('caseName')
+                        .setLabel('Case Name')
+                        .setStyle(TextInputStyle.Short)
+                ),
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('prosecutionAttorney')
+                        .setLabel('Prosecution Attorney or Plaintiff Attorney')
+                        .setStyle(TextInputStyle.Short)
+                ),
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('defenseAttorney')
+                        .setLabel('Defense Attorney')
+                        .setStyle(TextInputStyle.Short)
+                ),
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('motionType')
+                        .setLabel('Type of Motion')
+                        .setStyle(TextInputStyle.Short)
+                ),
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('reasonForMotion')
+                        .setLabel('Reason for Motion')
+                        .setStyle(TextInputStyle.Paragraph)
+                )
+            );
+
+        await interaction.showModal(modal);
+        console.log('Modal shown successfully.');
+    } catch (error) {
+        console.error('Error showing modal:', error);
     }
 });
 
@@ -72,75 +79,76 @@ client.on('interactionCreate', async interaction => {
 client.on('interactionCreate', async interaction => {
     if (!interaction.isModalSubmit()) return;
 
-    if (interaction.customId === 'motionForm') {
-        console.log('Modal submitted, generating PDF...');
-        try {
-            const caseName = interaction.fields.getTextInputValue('caseName');
-            const prosecutionAttorney = interaction.fields.getTextInputValue('prosecutionAttorney');
-            const defenseAttorney = interaction.fields.getTextInputValue('defenseAttorney');
-            const motionType = interaction.fields.getTextInputValue('motionType');
-            const reasonForMotion = interaction.fields.getTextInputValue('reasonForMotion');
+    const courtType = interaction.customId.includes('Criminal_Court') ? 'Criminal Court' : 'Civil Court';
+    console.log(`Modal submitted for ${courtType}, generating PDF...`);
 
-            console.log('Form Data:', {
-                caseName,
-                prosecutionAttorney,
-                defenseAttorney,
-                motionType,
-                reasonForMotion
-            });
+    try {
+        const caseName = interaction.fields.getTextInputValue('caseName');
+        const prosecutionAttorney = interaction.fields.getTextInputValue('prosecutionAttorney');
+        const defenseAttorney = interaction.fields.getTextInputValue('defenseAttorney');
+        const motionType = interaction.fields.getTextInputValue('motionType');
+        const reasonForMotion = interaction.fields.getTextInputValue('reasonForMotion');
 
-            const doc = new PDFDocument();
-            const filePath = path.join(motionsDir, `${caseName.replace(/ /g, '_')}.pdf`);
+        console.log('Form Data:', {
+            caseName,
+            prosecutionAttorney,
+            defenseAttorney,
+            motionType,
+            reasonForMotion,
+            courtType
+        });
 
-            const stream = fs.createWriteStream(filePath);
-            doc.pipe(stream);
+        const doc = new PDFDocument();
+        const filePath = path.join(motionsDir, `${caseName.replace(/ /g, '_')}.pdf`);
 
-            doc.fontSize(14).text('Commonwealth of San Andreas', { align: 'center' });
-            doc.fontSize(12).text('The Criminal Court', { align: 'center' });
-            doc.moveDown();
-            doc.text('MOTION FOR', { align: 'center' });
-            doc.text(motionType, { align: 'center', underline: true });
-            doc.moveDown();
-            doc.text(`State VS. ${caseName}`, { align: 'center' });
-            doc.moveDown();
-            doc.text(`DEFENDANT: ${defenseAttorney}`, { align: 'center' });
-            doc.moveDown();
-            doc.text(`Now comes ${prosecutionAttorney} [Defendant],`);
-            doc.moveDown();
-            doc.text(`In this action who requests:\nThat the ${motionType.toLowerCase()} should be inadmissible in the court of law.`);
-            doc.moveDown();
-            doc.text(`I. ${reasonForMotion}`);
-            doc.moveDown();
-            doc.text(`Date: ${new Date().toLocaleDateString()}`, { align: 'right' });
-            doc.text(`${interaction.user.username}`, { align: 'right' }); // Signed by the user who submitted
-            doc.end();
+        const stream = fs.createWriteStream(filePath);
+        doc.pipe(stream);
 
-            stream.on('finish', async () => {
-                try {
-                    console.log('PDF generated successfully:', filePath);
-                    const user = await client.users.fetch(interaction.user.id);
-                    await user.send({
-                        content: 'Your motion has been generated!',
-                        files: [filePath]
-                    });
+        doc.fontSize(14).text(`Commonwealth of San Andreas`, { align: 'center' });
+        doc.fontSize(12).text(`The ${courtType}`, { align: 'center' });
+        doc.moveDown();
+        doc.text('MOTION FOR', { align: 'center' });
+        doc.text(motionType, { align: 'center', underline: true });
+        doc.moveDown();
+        doc.text(` ${caseName}`, { align: 'center' });
+        doc.moveDown();
+        doc.text(`DEFENDANT: ${defenseAttorney}`, { align: 'center' });
+        doc.moveDown();
+        doc.text(`Now comes ${prosecutionAttorney} [Defendant],`);
+        doc.moveDown();
+        doc.text(`In this action who requests:\nThat the ${motionType.toLowerCase()} should be inadmissible in the court of law.`);
+        doc.moveDown();
+        doc.text(`I. ${reasonForMotion}`);
+        doc.moveDown();
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, { align: 'right' });
+        doc.text(`${interaction.user.username}`, { align: 'right' }); // Signed by the user who submitted
+        doc.end();
 
-                    console.log('PDF sent to user:', interaction.user.id);
-                    await interaction.reply({ content: 'Motion generated and sent to your DM!', ephemeral: true });
-                } catch (error) {
-                    console.error('Error sending DM:', error);
-                    await interaction.reply({ content: 'There was an error sending the motion to your DM. Please check the console for details.', ephemeral: true });
-                }
-            });
+        stream.on('finish', async () => {
+            try {
+                console.log('PDF generated successfully:', filePath);
+                const user = await client.users.fetch(interaction.user.id);
+                await user.send({
+                    content: 'Your motion has been generated!',
+                    files: [filePath]
+                });
 
-            stream.on('error', (error) => {
-                console.error('Error writing PDF file:', error);
-                interaction.reply({ content: 'There was an error generating the motion PDF. Please check the console for details.', ephemeral: true });
-            });
+                console.log('PDF sent to user:', interaction.user.id);
+                await interaction.reply({ content: 'Motion generated and sent to your DM!', ephemeral: true });
+            } catch (error) {
+                console.error('Error sending DM:', error);
+                await interaction.reply({ content: 'There was an error sending the motion to your DM. Please check the console for details.', ephemeral: true });
+            }
+        });
 
-        } catch (error) {
-            console.error('Error generating motion:', error);
-            await interaction.reply({ content: 'There was an error generating the motion. Please check the console for details.', ephemeral: true });
-        }
+        stream.on('error', (error) => {
+            console.error('Error writing PDF file:', error);
+            interaction.reply({ content: 'There was an error generating the motion PDF. Please check the console for details.', ephemeral: true });
+        });
+
+    } catch (error) {
+        console.error('Error generating motion:', error);
+        await interaction.reply({ content: 'There was an error generating the motion. Please check the console for details.', ephemeral: true });
     }
 });
 
@@ -176,8 +184,12 @@ client.on('messageCreate', async message => {
             const row = new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder()
-                        .setCustomId('openModal')
-                        .setLabel('Open Motion Form')
+                        .setCustomId('criminalCourtMotion')
+                        .setLabel('Criminal Court Motion')
+                        .setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder()
+                        .setCustomId('civilCourtMotion')
+                        .setLabel('Civil Court Motion')
                         .setStyle(ButtonStyle.Primary)
                 );
 
@@ -186,7 +198,7 @@ client.on('messageCreate', async message => {
                 components: [row]
             });
 
-            console.log('Motion button sent successfully.');
+            console.log('Motion buttons sent successfully.');
         } catch (error) {
             console.error('Error sending motion button message:', error);
         }
