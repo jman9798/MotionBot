@@ -3,6 +3,7 @@ const { token, clientId } = require('./config.json'); // Store your token and cl
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
+const slimId = '<@201870376127430666>';
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
@@ -366,5 +367,15 @@ client.on('messageCreate', async message => {
         } catch (error) {
             console.error('Error sending subpoena button message:', error);
         }
-    }
+    }   else if (message.content === '!honey'){
+        let yellGif = ['https://tenor.com/view/spongebob-spongebob-yelling-squidward-spongebob-meme-spongebob-gif-gif-25989400','https://tenor.com/view/kramer-yelling-arguing-in-my-face-kramer-yelling-gif-14813520', 'https://tenor.com/view/muppets-loud-yell-yelling-screaming-gif-21845107' ];
+        let yellGifLength = Math.floor(Math.random() *  yellGif.length);
+        let displayGif = yellGif[yellGifLength];
+        
+        await message.channel.send(`Honey Said its time for bed ${slimId}! ${displayGif}`);
+        
+
+    }   else if (message.content === '!index')
+        await message.channel.send(' # Commands \n **!motion** --- *To create a motion* \n **!subpoena** --- *To create subpoenas*\n **!honey** --- *The bot to yell at Slim!*');
+
 });
