@@ -126,6 +126,9 @@ client.on('interactionCreate', async interaction => {
     }
 
     if (interaction.isModalSubmit()) {
+        // Acknowledge the interaction immediately
+        await interaction.deferReply({ ephemeral: true });
+
         if (interaction.customId.startsWith('motionForm')) {
             const courtType = interaction.customId.includes('Criminal_Court') ? 'Criminal Court' : 'Civil Court';
             console.log(`Modal submitted for ${courtType}, generating PDF...`);
@@ -187,21 +190,21 @@ client.on('interactionCreate', async interaction => {
                         });
 
                         console.log('PDF sent to user:', interaction.user.id);
-                        await interaction.reply({ content: 'Motion generated and sent to your DM!', ephemeral: true });
+                        await interaction.editReply({ content: 'Motion generated and sent to your DM!' });
                     } catch (error) {
                         console.error('Error sending DM:', error);
-                        await interaction.reply({ content: 'There was an error sending the motion to your DM. Please check the console for details.', ephemeral: true });
+                        await interaction.editReply({ content: 'There was an error sending the motion to your DM. Please check the console for details.' });
                     }
                 });
 
-                stream.on('error', (error) => {
+                stream.on('error', async (error) => {
                     console.error('Error writing PDF file:', error);
-                    interaction.reply({ content: 'There was an error generating the motion PDF. Please check the console for details.', ephemeral: true });
+                    await interaction.editReply({ content: 'There was an error generating the motion PDF. Please check the console for details.' });
                 });
 
             } catch (error) {
                 console.error('Error generating motion:', error);
-                await interaction.reply({ content: 'There was an error generating the motion. Please check the console for details.', ephemeral: true });
+                await interaction.editReply({ content: 'There was an error generating the motion. Please check the console for details.' });
             }
         } else if (interaction.customId === 'subpoenaForm') {
             console.log('Subpoena modal submitted, generating PDF...');
@@ -269,21 +272,21 @@ client.on('interactionCreate', async interaction => {
                         });
 
                         console.log('PDF sent to user:', interaction.user.id);
-                        await interaction.reply({ content: 'Subpoena generated and sent to your DM!', ephemeral: true });
+                        await interaction.editReply({ content: 'Subpoena generated and sent to your DM!' });
                     } catch (error) {
                         console.error('Error sending DM:', error);
-                        await interaction.reply({ content: 'There was an error sending the subpoena to your DM. Please check the console for details.', ephemeral: true });
+                        await interaction.editReply({ content: 'There was an error sending the subpoena to your DM. Please check the console for details.' });
                     }
                 });
 
-                stream.on('error', (error) => {
+                stream.on('error', async (error) => {
                     console.error('Error writing PDF file:', error);
-                    interaction.reply({ content: 'There was an error generating the subpoena PDF. Please check the console for details.', ephemeral: true });
+                    await interaction.editReply({ content: 'There was an error generating the subpoena PDF. Please check the console for details.' });
                 });
 
             } catch (error) {
                 console.error('Error generating subpoena:', error);
-                await interaction.reply({ content: 'There was an error generating the subpoena. Please check the console for details.', ephemeral: true });
+                await interaction.editReply({ content: 'There was an error generating the subpoena. Please check the console for details.' });
             }
         }
     }
