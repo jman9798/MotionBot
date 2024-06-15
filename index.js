@@ -62,13 +62,13 @@ client.on('interactionCreate', async interaction => {
                         new ActionRowBuilder().addComponents(
                             new TextInputBuilder()
                                 .setCustomId('command')
-                                .setLabel('Command (Testify/Produce Documents)')
+                                .setLabel('Command (Use only TESTIFY or EVIDENCE)')
                                 .setStyle(TextInputStyle.Short)
                         ),
                         new ActionRowBuilder().addComponents(
                             new TextInputBuilder()
-                                .setCustomId('locationDateTime')
-                                .setLabel('Location, Date, and Time')
+                                .setCustomId('request')
+                                .setLabel('Specific Evidence Requested (CCTV, Testimony)')
                                 .setStyle(TextInputStyle.Short)
                         ),
                         new ActionRowBuilder().addComponents(
@@ -214,22 +214,26 @@ client.on('interactionCreate', async interaction => {
                 const caseName = interaction.fields.getTextInputValue('caseName');
                 const personSubpoenaed = interaction.fields.getTextInputValue('personSubpoenaed');
                 const command = interaction.fields.getTextInputValue('command');
-                const locationDateTime = interaction.fields.getTextInputValue('locationDateTime');
+                const request = interaction.fields.getTextInputValue('request');
                 const yourName = interaction.fields.getTextInputValue('yourName');
+                
 
                 console.log('Form Data:', {
                     caseName,
                     personSubpoenaed,
                     command,
-                    locationDateTime,
+                    request,
                     yourName
                 });
 
                 const doc = new PDFDocument();
                 const filePath = path.join(subpoenasDir, `${personSubpoenaed.replace(/ /g, '_')}_Subpoena.pdf`);
-
+                
                 const stream = fs.createWriteStream(filePath);
                 doc.pipe(stream);
+                  // Load the cursive font
+                  const cursiveFontPath = path.join(__dirname, 'fonts', 'GreatVibes-Regular.ttf');
+                  doc.font('Times-Roman'); // Default font for the rest of the document
 
                 doc.fontSize(14).text('The Courts of San Andreas', { align: 'center' });
                 doc.moveDown();
@@ -242,23 +246,26 @@ client.on('interactionCreate', async interaction => {
                 doc.text(`YOU ARE HEREBY COMMANDED TO:`, { align: 'left', underline: true });
                 doc.moveDown();
                 if (command.toLowerCase() === 'testify') {
-                    doc.text(`Appear and Testify at ${locationDateTime} in the above-referenced case.`, { align: 'left' });
-                } else {
-                    doc.text(`Produce the Following Documents or Items:`, { align: 'left' });
-                    doc.text(command, { align: 'left' });
-                    doc.text(`at ${locationDateTime}.`, { align: 'left' });
+                    doc.text(`Appear and or Testify at in the above-referenced case.`, { align: 'left' });
+                } else if (command.toLowerCase() === 'evidence') {
+                    doc.text(`to Produce ${request}`, { align: 'left' });
+                    doc.moveDown();
+                    doc.text(`Evidence is to be produced within 7 days or 24 hours prior to trial commencement, which ever comes first.`, { align: 'left' });
+                }  else {
+                    doc.fontSize(35).text('USER MUST SELECT TESTIFY or EVIDENCE WHEN USING LEGALDOCBOT!!!');
                 }
                 doc.moveDown();
                 doc.text(`Failure to comply with this subpoena may result in contempt of court and subject you to penalties under the law.`, { align: 'left' });
                 doc.moveDown();
                 doc.text(`Date: ${new Date().toLocaleDateString()}`, { align: 'left' });
                 doc.moveDown();
-                doc.text(`Issued by:`, { align: 'left' });
+                doc.text(`drafted by:`, { align: 'left' });
                 doc.text(yourName, { align: 'left' });
                 doc.moveDown();
-                doc.text('Signature: ___________________________', { align: 'left' });
+                doc.text(`Signature: `)
+                doc.fontSize(24).font(cursiveFontPath).text(`${yourName}` , { align: 'left' });
                 doc.moveDown();
-                doc.text(`Printed Name: ${yourName}`, { align: 'left' });
+                doc.fontSize(12).font('Times-Roman').text(`Printed Name: ${yourName}`, { align: 'left' });
                 doc.text(`Title/Role: Attorney`, { align: 'left' });
 
                 doc.end();
