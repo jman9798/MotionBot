@@ -172,7 +172,9 @@ client.on('interactionCreate', async interaction => {
                 doc.moveDown();
                 doc.text(`I, ${yourAttorneyName}, respectfully requests that this Court grant the Motion for ${motionType.toLowerCase()} and provide such other and further relief as the Court deems just and proper.`);
                 doc.moveDown();
-                doc.text(`I. ${reasonForMotion}`);
+                doc.fontSize(18).text('Reason')
+                doc.moveDown();
+                doc.fontSize(12).text(`     ${reasonForMotion}`);
                 doc.moveDown();
                 doc.text(`Date: ${new Date().toLocaleDateString()}`, { align: 'right' });
                 doc.moveDown();
@@ -382,7 +384,51 @@ client.on('messageCreate', async message => {
         await message.channel.send(`Honey Said its time for bed ${slimId}! ${displayGif}`);
         
 
-    }   else if (message.content === '!index')
+    }   else if (message.content === '!index'){
         await message.channel.send(' # Commands \n **!motion** --- *To create a motion* \n **!subpoena** --- *To create subpoenas*\n **!honey** --- *The bot to yell at Slim!*');
+    }   else if (message.content === '!clearCashe' && message.member.permissions.has('ADMINISTRATOR')) {
+        const directory = 'E:/MotionBot/motions';
+        fs.readdir(directory, (err, files) => {
+            if (err) {
+                message.channel.send('Error reading the directory.');
+                console.error(err);
+                return;
+            }
+
+            for (const file of files) {
+                const filePath = path.join(directory, file);
+                fs.stat(filePath, (err, stat) => {
+                    if (err) {
+                        message.channel.send('Error stating the file.');
+                        console.error(err);
+                        return;
+                    }
+
+                    if (stat.isDirectory()) {
+                        fs.rmdir(filePath, { recursive: true }, (err) => {
+                            if (err) {
+                                message.channel.send('Error deleting directory.');
+                                console.error(err);
+                                return;
+                            }
+                            console.log(`${filePath} directory deleted`);
+                        });
+                    } else {
+                        fs.unlink(filePath, (err) => {
+                            if (err) {
+                                message.channel.send('Error deleting file.');
+                                console.error(err);
+                                return;
+                            }
+                            console.log(`${filePath} file deleted`);
+                        });
+                    }
+                });
+            }
+            message.channel.send('Folder cleared successfully.');
+        });
+    }
+
+
 
 });
