@@ -436,6 +436,11 @@ client.on('messageCreate', async message => {
         let lawrenceId = '<@110849322282663936>';
         await message.channel.send(`When ${lawrenceId} is mad at you!`);
         await message.channel.send('https://tenor.com/view/fallout-new-vegas-degenerates-degenerates-like-you-belong-on-a-cross-degenerate-gif-21451302');
+    } else if (message.content === '!loafsGF'){
+            let loafId = '<@235851813721604096>';
+            await message.channel.send(`Brace yourself ${loafId}'s girlfiend is coming!!!!`);
+            await message.channel.send('https://tenor.com/view/large-woman-fast-running-sprint-run-gif-16304461');
+
     }
 
 
