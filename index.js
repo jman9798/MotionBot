@@ -427,6 +427,15 @@ client.on('messageCreate', async message => {
             }
             message.channel.send('Folder cleared successfully.');
         });
+    } else if (message.content === '!goon'){
+        let tothId = '<@263808514051276800>';
+       await message.channel.send(`Why ${tothId} so horny?`);
+        await message.channel.send('https://tenor.com/view/jarvis-iron-man-goon-gif-5902471035652079804');
+
+    } else if (message.content === '!degenerates'){
+        let lawrenceId = '<@110849322282663936>';
+        await message.channel.send(`When ${lawrenceId} is mad at you!`);
+        await message.channel.send('https://tenor.com/view/fallout-new-vegas-degenerates-degenerates-like-you-belong-on-a-cross-degenerate-gif-21451302');
     }
 
 
